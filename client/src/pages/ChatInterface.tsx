@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,9 @@ export default function ChatInterface() {
   const [newTitle, setNewTitle] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Get utils at component level (not in callbacks)
+  const utils = trpc.useUtils();
+
   // Queries and mutations
   const { data: conversation, isLoading: loadingConversation } =
     trpc.chat.getConversation.useQuery(
@@ -35,7 +38,7 @@ export default function ChatInterface() {
   const sendMessageMutation = trpc.chat.sendMessage.useMutation({
     onSuccess: () => {
       // Refetch conversation to get updated messages
-      trpc.useUtils().chat.getConversation.invalidate();
+      utils.chat.getConversation.invalidate();
     },
   });
 
@@ -54,7 +57,7 @@ export default function ChatInterface() {
   const renameConversationMutation = trpc.chat.renameConversation.useMutation({
     onSuccess: () => {
       setEditingTitle(false);
-      trpc.useUtils().chat.getConversation.invalidate();
+      utils.chat.getConversation.invalidate();
     },
   });
 

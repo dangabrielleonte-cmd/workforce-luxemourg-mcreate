@@ -73,3 +73,55 @@
 - [ ] Document API endpoints
 - [ ] Create testing checklist
 - [ ] Add troubleshooting guide
+
+
+## Migration to Independent Stack
+
+### Phase 1: Fix Published App Issues
+- [ ] Diagnose authentication issues on published version
+- [ ] Fix session cookie handling
+- [ ] Verify database connectivity
+- [ ] Test OAuth flow on production
+
+### Phase 2: Supabase Migration
+- [ ] Create Supabase project and PostgreSQL database
+- [ ] Migrate schema from MySQL to PostgreSQL
+- [ ] Set up Supabase Auth (email/password, OAuth)
+- [ ] Migrate user data to Supabase
+- [ ] Update database connection strings
+- [ ] Test database operations
+
+### Phase 3: DeepSeek API Integration
+- [ ] Create DeepSeek account and get API key
+- [ ] Replace Manus LLM calls with DeepSeek API
+- [ ] Update query routing logic for DeepSeek
+- [ ] Test response streaming
+- [ ] Verify cost and rate limits
+
+### Phase 4: Authentication Migration
+- [ ] Remove Manus OAuth dependencies
+- [ ] Implement Supabase Auth in frontend
+- [ ] Update login/signup flows
+- [ ] Implement session management
+- [ ] Test authentication flows
+
+### Phase 5: GitHub Setup
+- [ ] Create GitHub repository
+- [ ] Push code to GitHub
+- [ ] Set up GitHub Actions for CI/CD
+- [ ] Configure environment secrets
+- [ ] Add deployment workflows
+
+### Phase 6: Deployment Options
+- [ ] Deploy to Vercel (frontend)
+- [ ] Deploy to Railway/Render (backend)
+- [ ] Set up custom domain
+- [ ] Configure CORS and security headers
+- [ ] Test production deployment
+
+### Phase 7: Documentation
+- [ ] Create independent deployment guide
+- [ ] Document API keys and setup
+- [ ] Add troubleshooting guide
+- [ ] Create architecture diagram
+- [ ] Write cost breakdown
