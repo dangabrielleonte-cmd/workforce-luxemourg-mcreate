@@ -10,9 +10,15 @@ import {
   addMessage,
   addMessageSources,
   createConversation,
+  deleteConversation,
   getConversationWithMessages,
   getConversations,
+  getSharedConversations,
   getUserPreferences,
+  hasConversationAccess,
+  removeConversationShare,
+  shareConversation,
+  updateConversationTitle,
   upsertUserPreferences,
 } from "../db";
 import { generateChatResponse, routeQuery } from "../llm";
@@ -66,8 +72,10 @@ export const chatRouter = router({
         });
       }
 
-      // Verify ownership
-      if (result.conversation.userId !== ctx.user.id) {
+      // Check if user has access (owner or shared)
+      const hasAccess = await hasConversationAccess(input.conversationId, ctx.user.id);
+
+      if (!hasAccess) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You do not have access to this conversation",
@@ -228,12 +236,11 @@ export const chatRouter = router({
       if (conversation.conversation.userId !== ctx.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You do not have access to this conversation",
+          message: "Only the conversation owner can delete it",
         });
       }
 
-      // In production, implement actual deletion in db
-      // For now, just return success
+      await deleteConversation(input.conversationId);
       return { success: true };
     }),
 
@@ -260,12 +267,85 @@ export const chatRouter = router({
       if (conversation.conversation.userId !== ctx.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You do not have access to this conversation",
+          message: "Only the conversation owner can rename it",
         });
       }
 
-      // In production, implement actual update in db
+      await updateConversationTitle(input.conversationId, input.title);
       return { ...conversation.conversation, title: input.title };
+    }),
+
+  /**
+   * Share a conversation with another user
+   */
+  shareConversation: protectedProcedure
+    .input(
+      z.object({
+        conversationId: z.number(),
+        sharedWithUserId: z.number(),
+        permission: z.enum(["view", "edit", "admin"]).default("view"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const conversation = await getConversationWithMessages(input.conversationId);
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      if (conversation.conversation.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the conversation owner can share it",
+        });
+      }
+
+      return await shareConversation(
+        input.conversationId,
+        input.sharedWithUserId,
+        input.permission
+      );
+    }),
+
+  /**
+   * Get conversations shared with the current user
+   */
+  getSharedWithMe: protectedProcedure.query(async ({ ctx }) => {
+    return await getSharedConversations(ctx.user.id);
+  }),
+
+  /**
+   * Remove conversation share
+   */
+  removeShare: protectedProcedure
+    .input(
+      z.object({
+        conversationId: z.number(),
+        sharedWithUserId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const conversation = await getConversationWithMessages(input.conversationId);
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      if (conversation.conversation.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the conversation owner can remove shares",
+        });
+      }
+
+      await removeConversationShare(input.conversationId, input.sharedWithUserId);
+      return { success: true };
     }),
 });
 

@@ -129,3 +129,22 @@ export const userPreferences = mysqlTable("userPreferences", {
 
 export type UserPreference = typeof userPreferences.$inferSelect;
 export type InsertUserPreference = typeof userPreferences.$inferInsert;
+
+/**
+ * Conversation sharing table for managing shared access to conversations.
+ * Allows conversation owners to explicitly share conversations with other users.
+ */
+export const conversationShares = mysqlTable("conversationShares", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId")
+    .notNull()
+    .references(() => conversations.id, { onDelete: "cascade" }),
+  sharedWithUserId: int("sharedWithUserId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  permission: mysqlEnum("permission", ["view", "edit", "admin"]).default("view").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ConversationShare = typeof conversationShares.$inferSelect;
+export type InsertConversationShare = typeof conversationShares.$inferInsert;

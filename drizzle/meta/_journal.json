@@ -15,6 +15,13 @@
       "when": 1770305065318,
       "tag": "0001_uneven_blonde_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1770442857009,
+      "tag": "0002_worthless_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

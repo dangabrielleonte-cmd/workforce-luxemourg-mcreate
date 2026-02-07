@@ -1,7 +1,8 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   conversations,
+  conversationShares,
   events,
   integrations,
   messageSources,
@@ -9,8 +10,10 @@ import {
   userPreferences,
   users,
   type Conversation,
+  type ConversationShare,
   type Event,
   type InsertConversation,
+  type InsertConversationShare,
   type InsertEvent,
   type InsertIntegration,
   type InsertMessage,
@@ -105,65 +108,15 @@ export async function getUserByOpenId(openId: string) {
     return undefined;
   }
 
-  const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.openId, openId))
-    .limit(1);
+  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
 }
 
 /**
- * Get user preferences or create default
+ * Create a conversation
  */
-export async function getUserPreferences(userId: number) {
-  const db = await getDb();
-  if (!db) return null;
-
-  const result = await db
-    .select()
-    .from(userPreferences)
-    .where(eq(userPreferences.userId, userId))
-    .limit(1);
-
-  return result.length > 0 ? result[0] : null;
-}
-
-/**
- * Create or update user preferences
- */
-export async function upsertUserPreferences(
-  userId: number,
-  preferences: Partial<InsertUserPreference>
-) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const existing = await getUserPreferences(userId);
-
-  if (existing) {
-    await db
-      .update(userPreferences)
-      .set({
-        ...preferences,
-        updatedAt: new Date(),
-      })
-      .where(eq(userPreferences.userId, userId));
-  } else {
-    await db.insert(userPreferences).values({
-      userId,
-      ...preferences,
-    });
-  }
-}
-
-/**
- * Create a new conversation
- */
-export async function createConversation(
-  data: InsertConversation
-): Promise<Conversation> {
+export async function createConversation(data: InsertConversation): Promise<Conversation> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -181,22 +134,27 @@ export async function createConversation(
 }
 
 /**
- * Get conversations for a user or site key
+ * Get all conversations for a user
  */
-export async function getConversations(
-  userId?: number,
-  externalSiteKey?: string
-) {
+export async function getConversations(userId: number) {
   const db = await getDb();
   if (!db) return [];
 
-  if (userId) {
-    return await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.userId, userId))
-      .orderBy(conversations.createdAt);
-  } else if (externalSiteKey) {
+  return await db
+    .select()
+    .from(conversations)
+    .where(eq(conversations.userId, userId))
+    .orderBy(conversations.createdAt);
+}
+
+/**
+ * Get conversations by external site key
+ */
+export async function getConversationsBySiteKey(externalSiteKey: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (externalSiteKey) {
     return await db
       .select()
       .from(conversations)
@@ -372,4 +330,172 @@ export async function getIntegrationAnalytics(integrationId: number) {
     totalEvents: eventCount.length,
     events: eventCount,
   };
+}
+
+/**
+ * Share a conversation with another user
+ */
+export async function shareConversation(
+  conversationId: number,
+  sharedWithUserId: number,
+  permission: "view" | "edit" | "admin" = "view"
+): Promise<ConversationShare> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(conversationShares).values({
+    conversationId,
+    sharedWithUserId,
+    permission,
+  });
+
+  const shareId = result[0].insertId as number;
+  const created = await db
+    .select()
+    .from(conversationShares)
+    .where(eq(conversationShares.id, shareId))
+    .limit(1);
+
+  if (!created.length) throw new Error("Failed to share conversation");
+  return created[0];
+}
+
+/**
+ * Get conversations shared with a user
+ */
+export async function getSharedConversations(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const shares = await db
+    .select()
+    .from(conversationShares)
+    .where(eq(conversationShares.sharedWithUserId, userId));
+
+  if (shares.length === 0) return [];
+
+  const conversationIds = shares.map((s) => s.conversationId);
+  const convs = await db
+    .select()
+    .from(conversations)
+    .where(inArray(conversations.id, conversationIds));
+
+  return convs.map((conv) => ({
+    conversation: conv,
+    share: shares.find((s) => s.conversationId === conv.id)!,
+  }));
+}
+
+/**
+ * Remove conversation share
+ */
+export async function removeConversationShare(
+  conversationId: number,
+  sharedWithUserId: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .delete(conversationShares)
+    .where(
+      and(
+        eq(conversationShares.conversationId, conversationId),
+        eq(conversationShares.sharedWithUserId, sharedWithUserId)
+      )
+    );
+}
+
+/**
+ * Check if user has access to conversation (owner or shared)
+ */
+export async function hasConversationAccess(
+  conversationId: number,
+  userId: number
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  // Check if user is owner
+  const ownedConv = await db
+    .select()
+    .from(conversations)
+    .where(and(eq(conversations.id, conversationId), eq(conversations.userId, userId)))
+    .limit(1);
+
+  if (ownedConv.length > 0) return true;
+
+  // Check if conversation is shared with user
+  const sharedConv = await db
+    .select()
+    .from(conversationShares)
+    .where(
+      and(
+        eq(conversationShares.conversationId, conversationId),
+        eq(conversationShares.sharedWithUserId, userId)
+      )
+    )
+    .limit(1);
+
+  return sharedConv.length > 0;
+}
+
+/**
+ * Get user preferences
+ */
+export async function getUserPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, userId))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+/**
+ * Upsert user preferences
+ */
+export async function upsertUserPreferences(userId: number, prefs: Partial<InsertUserPreference>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .insert(userPreferences)
+    .values({
+      userId,
+      ...prefs,
+    })
+    .onDuplicateKeyUpdate({
+      set: prefs,
+    });
+}
+
+/**
+ * Delete a conversation
+ */
+export async function deleteConversation(conversationId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(conversations).where(eq(conversations.id, conversationId));
+}
+
+/**
+ * Update conversation title
+ */
+export async function updateConversationTitle(
+  conversationId: number,
+  title: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(conversations)
+    .set({ title, updatedAt: new Date() })
+    .where(eq(conversations.id, conversationId));
 }
