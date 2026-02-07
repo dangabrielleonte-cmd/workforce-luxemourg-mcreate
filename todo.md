@@ -60,6 +60,10 @@
 ## Testing & Deployment
 - [x] Write vitest tests for backend procedures
 - [x] Write vitest tests for LLM integration
+- [x] Write vitest tests for debug router
+- [x] Fix cookie domain configuration for proper persistence
+- [x] Update OAuth callback with proper error handling
+- [x] Add session validation and debugging endpoints
 - [ ] Test chat streaming functionality
 - [ ] Test query routing accuracy
 - [ ] Test embedding on sample websites
