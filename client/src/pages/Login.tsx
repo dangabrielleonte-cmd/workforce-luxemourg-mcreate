@@ -71,11 +71,11 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Username
+                Email
               </label>
               <Input
-                type="text"
-                placeholder="Enter username"
+                type="email"
+                placeholder="Enter email address"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={loginMutation.isPending}
@@ -128,7 +128,7 @@ export default function Login() {
               </p>
               <div className="space-y-2 text-sm text-blue-800 mb-4">
                 <p>
-                  <strong>Username:</strong> <code className="bg-white px-2 py-1 rounded">{credentialQuery.data.username}</code>
+                  <strong>Email:</strong> <code className="bg-white px-2 py-1 rounded">{credentialQuery.data.username}</code>
                 </p>
                 <p>
                   <strong>Password:</strong> <code className="bg-white px-2 py-1 rounded">{credentialQuery.data.password}</code>

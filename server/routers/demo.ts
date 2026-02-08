@@ -10,9 +10,9 @@ import { getDb, upsertUser } from "../db";
 
 // Demo credentials - use these to test the app
 const DEMO_CREDENTIALS = {
-  username: "demo",
-  password: "demo123456",
-  email: "demo@workforce-luxembourg.test",
+  username: "demo@testing11.com",
+  password: "Testingit11!",
+  email: "demo@testing11.com",
 };
 
 // Demo user ID (fixed for consistent sessions)
@@ -30,14 +30,14 @@ export const demoRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify credentials
-      if (
-        input.username !== DEMO_CREDENTIALS.username ||
-        input.password !== DEMO_CREDENTIALS.password
-      ) {
+      // Verify credentials (support both email and username)
+      const isValidUsername = input.username === DEMO_CREDENTIALS.username;
+      const isValidPassword = input.password === DEMO_CREDENTIALS.password;
+      
+      if (!isValidUsername || !isValidPassword) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid username or password",
+          message: "Invalid email or password",
         });
       }
 
@@ -45,7 +45,7 @@ export const demoRouter = router({
       const demoOpenId = `demo-user-${DEMO_USER_ID}`;
       await upsertUser({
         openId: demoOpenId,
-        name: "Demo User",
+        name: "Demo Tester",
         email: DEMO_CREDENTIALS.email,
         loginMethod: "demo",
         role: "user",
