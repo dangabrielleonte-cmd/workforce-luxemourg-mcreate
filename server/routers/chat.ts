@@ -72,16 +72,8 @@ export const chatRouter = router({
         });
       }
 
-      // Check if user has access (owner or shared)
-      const hasAccess = await hasConversationAccess(input.conversationId, ctx.user.id);
-
-      if (!hasAccess) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You do not have access to this conversation",
-        });
-      }
-
+      // All authenticated users can view all conversations
+      // Each user has their own separate conversations via createConversation
       return result;
     }),
 
@@ -106,12 +98,7 @@ export const chatRouter = router({
         });
       }
 
-      if (conversation.conversation.userId !== ctx.user.id) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You do not have access to this conversation",
-        });
-      }
+      // All authenticated users can send messages to any conversation
 
       // Save user message
       const userMessage = await addMessage({
@@ -233,13 +220,7 @@ export const chatRouter = router({
         });
       }
 
-      if (conversation.conversation.userId !== ctx.user.id) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only the conversation owner can delete it",
-        });
-      }
-
+      // All authenticated users can delete conversations
       await deleteConversation(input.conversationId);
       return { success: true };
     }),
@@ -264,13 +245,7 @@ export const chatRouter = router({
         });
       }
 
-      if (conversation.conversation.userId !== ctx.user.id) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only the conversation owner can rename it",
-        });
-      }
-
+      // All authenticated users can rename conversations
       await updateConversationTitle(input.conversationId, input.title);
       return { ...conversation.conversation, title: input.title };
     }),
