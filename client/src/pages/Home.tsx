@@ -12,11 +12,17 @@ import {
   Users,
   Zap,
   ArrowRight,
+  LogOut,
 } from "lucide-react";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [, navigate] = useLocation();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   const exampleQuestions = [
     {
@@ -85,8 +91,12 @@ export default function Home() {
                 <Button variant="outline" onClick={() => navigate("/chat")}>
                   Dashboard
                 </Button>
-                <Button onClick={() => navigate("/integrations")}>
+                <Button variant="outline" onClick={() => navigate("/integrations")}>
                   Integrations
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Logout
                 </Button>
               </>
             ) : (
