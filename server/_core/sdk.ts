@@ -260,7 +260,13 @@ class SDKServer {
     // Regular authentication flow
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
-    const session = await this.verifySession(sessionCookie);
+    const demoSessionCookie = cookies.get("manus_session");
+    
+    // Try regular session first, then demo session
+    let session = await this.verifySession(sessionCookie);
+    if (!session && demoSessionCookie) {
+      session = await this.verifySession(demoSessionCookie);
+    }
 
     if (!session) {
       throw ForbiddenError("Invalid session cookie");
@@ -270,8 +276,8 @@ class SDKServer {
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
-    // If user not in DB, sync from OAuth server automatically
-    if (!user) {
+    // If user not in DB, sync from OAuth server automatically (skip for demo users)
+    if (!user && !sessionUserId.startsWith("demo-user-")) {
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
         await db.upsertUser({
@@ -289,7 +295,22 @@ class SDKServer {
     }
 
     if (!user) {
-      throw ForbiddenError("User not found");
+      // For demo users, create a temporary user object if not found
+      if (sessionUserId.startsWith("demo-user-")) {
+        user = {
+          id: 999999,
+          openId: sessionUserId,
+          name: "Demo User",
+          email: "demo@workforce-luxembourg.test",
+          loginMethod: "demo",
+          role: "user",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastSignedIn: signedInAt,
+        };
+      } else {
+        throw ForbiddenError("User not found");
+      }
     }
 
     await db.upsertUser({
