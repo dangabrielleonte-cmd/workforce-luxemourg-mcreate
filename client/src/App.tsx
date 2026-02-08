@@ -13,16 +13,6 @@ import { useAuth } from "@/_core/hooks/useAuth";
 function Router() {
   const { isAuthenticated, loading } = useAuth();
 
-  // Show login page if not authenticated
-  if (!isAuthenticated && !loading) {
-    return (
-      <Switch>
-        <Route path={"/login"} component={Login} />
-        <Route component={Login} />
-      </Switch>
-    );
-  }
-
   // Show loading while checking auth
   if (loading) {
     return (
@@ -35,9 +25,20 @@ function Router() {
     );
   }
 
-  // Show app routes if authenticated
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <Switch>
+        <Route path={"/login"} component={Login} />
+        <Route component={Login} />
+      </Switch>
+    );
+  }
+
+  // Show app routes if authenticated (login route always accessible for logout redirect)
   return (
     <Switch>
+      <Route path={"/login"} component={Login} />
       <Route path={"/"} component={Home} />
       <Route path={"/chat/:conversationId"} component={ChatInterface} />
       <Route path={"/chat"} component={ChatInterface} />
