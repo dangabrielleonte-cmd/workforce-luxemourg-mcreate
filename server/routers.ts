@@ -16,7 +16,9 @@ export const appRouter = router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
+      // Clear both Manus OAuth cookie and demo session cookie
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      ctx.res.clearCookie("manus_session", { ...cookieOptions, maxAge: -1 });
       return {
         success: true,
       } as const;

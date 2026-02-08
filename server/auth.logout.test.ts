@@ -49,7 +49,8 @@ describe("auth.logout", () => {
     const result = await caller.auth.logout();
 
     expect(result).toEqual({ success: true });
-    expect(clearedCookies).toHaveLength(1);
+    expect(clearedCookies).toHaveLength(2);
+    // Check Manus OAuth cookie
     expect(clearedCookies[0]?.name).toBe(COOKIE_NAME);
     expect(clearedCookies[0]?.options).toMatchObject({
       maxAge: -1,
@@ -57,6 +58,11 @@ describe("auth.logout", () => {
       sameSite: "lax",
       httpOnly: true,
       path: "/",
+    });
+    // Check demo session cookie
+    expect(clearedCookies[1]?.name).toBe("manus_session");
+    expect(clearedCookies[1]?.options).toMatchObject({
+      maxAge: -1,
     });
   });
 });

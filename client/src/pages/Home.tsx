@@ -20,8 +20,12 @@ export default function Home() {
   const [, navigate] = useLocation();
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      await logout();
+    } finally {
+      // Force page reload to clear all state and redirect to login
+      window.location.href = "/login";
+    }
   };
 
   const exampleQuestions = [
