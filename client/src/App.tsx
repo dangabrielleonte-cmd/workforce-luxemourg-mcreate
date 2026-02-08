@@ -7,9 +7,35 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ChatInterface from "./pages/ChatInterface";
 import Integrations from "./pages/Integrations";
+import Login from "./pages/Login";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
+  const { isAuthenticated, loading } = useAuth();
+
+  // Show login page if not authenticated
+  if (!isAuthenticated && !loading) {
+    return (
+      <Switch>
+        <Route path={"/login"} component={Login} />
+        <Route component={Login} />
+      </Switch>
+    );
+  }
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show app routes if authenticated
   return (
     <Switch>
       <Route path={"/"} component={Home} />
