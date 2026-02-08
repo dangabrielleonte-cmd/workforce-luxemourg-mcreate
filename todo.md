@@ -13,7 +13,10 @@
 - [x] Build query routing logic for three expertise modes (Procedural, Legal, AI/Innovation)
 - [x] Create mode-specific answer templates
 - [x] Implement citation extraction and formatting
-- [ ] Integrate with Guichet.lu content retrieval system (advanced feature)
+- [x] Create Guichet.lu web scraper module
+- [x] Build knowledge base storage and indexing
+- [x] Integrate real data retrieval into chat responses
+- [x] Test with real Guichet.lu content (8 tests passing)
 
 ### Frontend - Standalone Interface
 - [x] Build landing page with product description and example questions
