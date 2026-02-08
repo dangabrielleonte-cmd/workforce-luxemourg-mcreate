@@ -132,3 +132,11 @@
 - [ ] Add troubleshooting guide
 - [ ] Create architecture diagram
 - [ ] Write cost breakdown
+
+
+## Critical Fixes Completed
+- [x] Implement exact response format with evidence structure (language, answer, steps, citations, confidence, limitations, suggested_searches, evidence)
+- [x] Create formatted chat router with proper response structure
+- [x] Add 5 comprehensive tests for response format (all passing)
+- [ ] Fix demo login page routing - update auth.me to recognize demo sessions
+- [ ] Test demo login credentials (demo/demo123456) end-to-end

@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { demoRouter } from "./routers/demo";
 import { chatRouter } from "./routers/chat";
+import { chatFormattedRouter } from "./routers/chat-formatted";
 import { integrationsRouter } from "./routers/integrations";
 import { debugRouter } from "./routers/debug";
 
@@ -22,7 +23,7 @@ export const appRouter = router({
     }),
   }),
 
-  chat: chatRouter,
+  chat: chatFormattedRouter,
   integrations: integrationsRouter,
   debug: debugRouter,
 });
