@@ -24,25 +24,16 @@ export default function Login() {
     },
   });
 
-  const credentialQuery = trpc.demo.getCredentials.useQuery();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!username || !password) {
-      setError("Please enter both username and password");
+      setError("Please enter both email and password");
       return;
     }
 
     loginMutation.mutate({ username, password });
-  };
-
-  const handleDemoLogin = () => {
-    if (credentialQuery.data) {
-      setUsername(credentialQuery.data.username);
-      setPassword(credentialQuery.data.password);
-    }
   };
 
   return (
@@ -120,37 +111,10 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Demo Credentials */}
-          {credentialQuery.data && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm font-semibold text-blue-900 mb-3">
-                Demo Credentials:
-              </p>
-              <div className="space-y-2 text-sm text-blue-800 mb-4">
-                <p>
-                  <strong>Email:</strong> <code className="bg-white px-2 py-1 rounded">{credentialQuery.data.username}</code>
-                </p>
-                <p>
-                  <strong>Password:</strong> <code className="bg-white px-2 py-1 rounded">{credentialQuery.data.password}</code>
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleDemoLogin}
-                className="w-full"
-              >
-                Auto-fill Demo Credentials
-              </Button>
-            </div>
-          )}
-
           {/* Info */}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
             <p className="text-xs text-slate-600">
-              This is a demo account for testing the Workforce Luxembourg HR & Employment Law Assistant. 
-              Use the credentials above to access the full application.
+              Please use the credentials provided to you to access the Workforce Luxembourg HR & Employment Law Assistant.
             </p>
           </div>
         </div>

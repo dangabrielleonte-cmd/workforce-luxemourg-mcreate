@@ -34,6 +34,18 @@ async function startServer() {
 
   const app = express();
   const server = createServer(app);
+  
+  // Add cache-busting headers to prevent browser caching issues
+  app.use((req, res, next) => {
+    // Disable caching for HTML and API responses
+    if (req.path.endsWith('.html') || req.path.startsWith('/api')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    next();
+  });
+  
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -51,6 +63,19 @@ async function startServer() {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
+    // Add cache headers for static assets (with content hash)
+    app.use(express.static('dist', {
+      maxAge: '1y',
+      etag: false,
+      setHeaders: (res, path) => {
+        // Don't cache HTML files
+        if (path.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
+      }
+    }));
     serveStatic(app);
   }
 
