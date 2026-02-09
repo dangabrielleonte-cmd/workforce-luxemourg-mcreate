@@ -5,15 +5,11 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files and patches first
-COPY package.json pnpm-lock.yaml ./
-COPY patches ./patches
+# Copy ALL files first (including patches)
+COPY . .
 
 # Install dependencies
 RUN npm install -g pnpm && pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
 
 # Build application
 RUN pnpm build
