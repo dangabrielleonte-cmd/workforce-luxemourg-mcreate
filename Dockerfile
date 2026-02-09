@@ -19,15 +19,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install pnpm and node-gyp dependencies
-RUN npm install -g pnpm && apk add --no-cache python3 make g++
+# Install pnpm
+RUN npm install -g pnpm
 
-# Copy package files, lock file, and patches
+# Copy only what we need for production
 COPY package.json pnpm-lock.yaml ./
-COPY patches ./patches
 
-# Install production dependencies (with patches available)
-RUN pnpm install --frozen-lockfile --prod
+# Install production dependencies without patches (patches were already applied in build stage)
+RUN pnpm install --frozen-lockfile --prod --no-optional
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
