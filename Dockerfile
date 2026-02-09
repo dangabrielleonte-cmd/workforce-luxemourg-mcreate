@@ -22,15 +22,19 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy only what we need for production
+# Copy package files, lock file, and patches directory
 COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches
 
-# Install production dependencies without patches (patches were already applied in build stage)
-RUN pnpm install --frozen-lockfile --prod --no-optional
+# Install production dependencies WITH patches available
+RUN pnpm install --frozen-lockfile --prod
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/client/dist ./client/dist
+
+# Remove patches directory after install (not needed at runtime)
+RUN rm -rf patches
 
 # Expose port
 EXPOSE 3000
